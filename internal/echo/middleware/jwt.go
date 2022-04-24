@@ -141,6 +141,7 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 			}
 
 			scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
+ 
 			loggerObj := contracts_logger.GetILoggerFromContainer(scopedContainer)
 			logger := loggerObj.GetLogger().With().Str("middleware", middlewareLogName).Logger()
 
@@ -168,7 +169,6 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 								Type:  core_wellknown.ClaimTypeAuthenticated,
 								Value: "*"})
 							logger.Trace().Interface("claims", claimsPrincipal.GetClaims()).Send()
-
 						}
 					}
 				}
