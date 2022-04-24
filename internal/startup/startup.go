@@ -4,7 +4,6 @@ import (
 	"context"
 	echostarter_auth "echo-starter/internal/auth"
 	contracts_config "echo-starter/internal/contracts/config"
-	"echo-starter/internal/wellknown"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -49,8 +48,9 @@ import (
 	core_contracts_session "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/session"
 	core_middleware_claimsprincipal "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/middleware/claimsprincipal"
 
-	middleware_claimsprincipal "echo-starter/internal/middleware/claimsprincipal"
-	middleware_session "echo-starter/internal/middleware/session"
+	echo_middleware "echo-starter/internal/echo/middleware"
+	//middleware_claimsprincipal "echo-starter/internal/middleware/claimsprincipal"
+
 	services_claimsprovider "echo-starter/internal/services/claimsprovider"
 
 	services_handlers_error "echo-starter/internal/services/handlers/error"
@@ -203,13 +203,6 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 		// AUTH SERVICES
 		//----------------------------------------------------------------------------------------------------------------------
 		core_contracts_oidc.AddGetOIDCAuthenticatorConfigFunc(builder, func() *core_contracts_oidc.AuthenticatorConfig {
-			if core_utils.IsEmptyOrNil(s.config.OIDC.CallbackURL) {
-				// primarily for development
-				port := s.config.Port
-				s.config.OIDC.CallbackURL = fmt.Sprintf("http://localhost:%v%s",
-					port,
-					wellknown.OIDCCallbackPath)
-			}
 
 			return &core_contracts_oidc.AuthenticatorConfig{
 				Domain:       s.config.OIDC.Domain,
@@ -290,8 +283,9 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	}))
 	// DevelopmentMiddlewareUsingClaimsMap adds all the needed claims so that FinalAuthVerificationMiddlewareUsingClaimsMap succeeds
 	//e.Use(middleware_claimsprincipal.DevelopmentMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
-	e.Use(middleware_session.EnsureAuthTokenRefresh(s.GetContainer()))
-	e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
+	e.Use(echo_middleware.JWT(s.GetContainer()))
+
+	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	// only after we pass auth do we slide out the auth session
 	e.Use(core_middleware_session.EnsureSlidingSession(root, app_session.GetAuthSession))
