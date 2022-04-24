@@ -6,7 +6,7 @@
 <!-- Page content-->
 <div class="container">
     <div class="text-center mt-5">
-        <h1>A Bootstrap 5 Starter Template</h1>
+        <h1>Webhooks Example App with OAuth2 bearer tokens</h1>
         <p class="lead">A complete project boilerplate built with Bootstrap</p>
         <p>Bootstrap v5.1.3</p>
         <div class="alert alert-success" role="alert">
@@ -32,8 +32,8 @@
             <div class="columns is-centered is-mobile">	
                 <div class="column is-dark notification is-four-fifths">
                     <div class="is-size-7 has-text-warning" id="progress">
-                        <h1 class="title">flasktest</h1>
-                        <h2 class="subtitle">Progress example</h2>
+                        <h1 class="title">Server Side Events</h1>
+                        <h2 class="subtitle">Progress</h2>
                         <ul id="progress_list">
                         </ul>
                     </div>
