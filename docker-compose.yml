@@ -19,7 +19,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - whoami
-      - echostarter
+      - echowebhooks
 
  # whoami
  #============================================================================
@@ -30,13 +30,13 @@ services:
       - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
 
 
- # echostarter
+ # echowebhooks
  #============================================================================
-  echostarter:
+  echowebhooks:
     image: "${ECHO_STARTER_IMAGE_NAME}:${ECHO_STARTER_VERSION}"
     labels:
-      - "traefik.http.routers.echostarter.rule=Host(`${ECHO_STARTER_DOMAIN}`)"
-      - "traefik.http.services.echostarter.loadbalancer.server.port=80"
+      - "traefik.http.routers.echowebhooks.rule=Host(`${ECHO_STARTER_DOMAIN}`)"
+      - "traefik.http.services.echowebhooks.loadbalancer.server.port=80"
     ports:
       - ${ECHO_STARTER_PORT}:80
     logging:
@@ -44,8 +44,7 @@ services:
       options:
         max-size: "${CONTAINER_LOG_SIZE}"
         max-file: "${CONTAINER_LOG_COUNT}"
-    depends_on:
-      - redis
+ 
     environment:
       APPLICATION_ENVIRONMENT: "${APPLICATION_ENVIRONMENT}"
       PORT: "80"
@@ -53,13 +52,10 @@ services:
       AUTH_STORE: "${ECHO_STARTER_AUTH_STORE}"
       LOG_LEVEL: "${ECHO_STARTER_LOG_LEVEL}"
       PRETTY_LOG: "${ECHO_STARTER_PRETTY_LOG}"
-      OAUTH2__CLIENT_ID: "${ECHO_STARTER_OAUTH2__CLIENT_ID}"
-      OAUTH2__CLIENT_SECRET: "${ECHO_STARTER_OAUTH2__CLIENT_SECRET}"
-      OAUTH2__SCOPES: "${ECHO_STARTER_OAUTH2__SCOPES}"
-      OIDC__DOMAIN: "${AUTH0_DOMAIN}"
-      OIDC__CLIENT_ID: "${AUTH0_CLIENT_ID}"
-      OIDC__CLIENT_SECRET: "${AUTH0_CLIENT_SECRET}"
-      OIDC__CALLBACK_URL: "http://${ECHO_STARTER_DOMAIN}/oidc"
+      OIDC__DOMAIN: "${OIDC__DOMAIN}"
+      OIDC__CLIENT_ID: "${OIDC__CLIENT_ID}"
+      OIDC__CLIENT_SECRET: "${OIDC__CLIENT_SECRET}"
+      OIDC__CALLBACK_URL: "${OIDC__CALLBACK_URL}"
       SECURE_COOKIE_HASH_KEY: "wVsibJSltJAgkniN9tlzy39ZDUzuMTSFwsQek6qTcuY="
       SECURE_COOKIE_ENCRYPTION_KEY: "7fB3PkhfOKsbU/2vE2KQdLqu0jGZ+GLaEL5AQ7maUw4="
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
@@ -67,7 +63,7 @@ services:
       SESSION_MAX_AGE_SECONDS: "${ECHO_STARTER_SESSION_MAX_AGE_SECONDS}"
       AUTH_COOKIE_EXPIRE_SECONDS: "${ECHO_STARTER_AUTH_COOKIE_EXPIRE_SECONDS}"
       REDIS_URL: "${REDIS_NAME}:${REDIS_PORT}"
-      GRAPHQL_ENDPOINT: "${ECHO_STARTER_GRAPHQL_ENDPOINT_GITHUB}"
+      
 
     entrypoint: ["/app/server"]
 
