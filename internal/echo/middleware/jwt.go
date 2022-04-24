@@ -11,6 +11,7 @@ import (
 	di "github.com/fluffy-bunny/sarulabsdi"
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog/log"
 	jose_jwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
@@ -108,8 +109,11 @@ const middlewareLogName = "jwt-to-claims-principal"
 // JWTWithConfig returns a JWT auth middleware with config.
 // See: `JWT()`.
 func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
+	log.Info().Msg("JWT to Claims Middleware")
 	oidcAuthenticator, _ := core_contracts_oidc.SafeGetIOIDCAuthenticatorFromContainer(root)
-
+	if oidcAuthenticator == nil {
+		log.Info().Msg("JWT to Claims Middleware: OIDC Authenticator not found in container")
+	}
 	// Defaults
 	if config.Skipper == nil {
 		config.Skipper = DefaultJWTConfig.Skipper
@@ -131,7 +135,10 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
+
 		return func(c echo.Context) error {
+			log.Trace().Msg("JWT to Claims Middleware - ENTER")
+			defer log.Trace().Msg("JWT to Claims Middleware - EXIT")
 			if config.Skipper(c) {
 				return next(c)
 			}
@@ -141,7 +148,7 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 			}
 
 			scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
- 
+
 			loggerObj := contracts_logger.GetILoggerFromContainer(scopedContainer)
 			logger := loggerObj.GetLogger().With().Str("middleware", middlewareLogName).Logger()
 
