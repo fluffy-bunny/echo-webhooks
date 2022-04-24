@@ -53,12 +53,18 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 		return func(c echo.Context) error {
 
 			for {
+				scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
+				logger := contracts_logger.GetILoggerFromContainer(scopedContainer)
+				errorEvent := logger.GetLogger().Error().Str("middleware", middlewareLogName)
+				debugEvent := logger.GetLogger().Debug().Str("middleware", middlewareLogName)
+				traceEvent := logger.GetLogger().Trace().Str("middleware", middlewareLogName)
 
 				// Skip this if we see an authorization header
 				// important: The CSRF middleware is skipped as well if there is an Authorization header
 				// So if we get here then we can't be adding any claims if someone got our session
 				// always use the HasWellknownAuthHeaders centralized func
 				if core_echo.HasWellknownAuthHeaders(c) {
+					traceEvent.Msg("skipping middleware - HasWellknownAuthHeaders")
 					// this is a cookie/session claims maker so if another authorization scheme is used we will not contribute
 					break
 				}
@@ -66,17 +72,13 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 				sess := session.GetSession(c)
 				bindingKey, ok := sess.Values["binding_key"]
 				if !ok {
+					traceEvent.Msg("skipping middleware - if we don't  have this the user hasn't logged in")
 					// if we don't  have this the user hasn't logged in
 					break
 				}
 				var terminateAuthSession = func() {
 					session.TerminateSession(c)
 				}
-
-				scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
-				logger := contracts_logger.GetILoggerFromContainer(scopedContainer)
-				errorEvent := logger.GetLogger().Error().Str("middleware", middlewareLogName)
-				debugEvent := logger.GetLogger().Debug().Str("middleware", middlewareLogName)
 
 				tokenStore := contracts_auth.GetIInternalTokenStoreFromContainer(scopedContainer)
 
