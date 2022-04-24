@@ -9,7 +9,7 @@ require (
 	github.com/catmullet/go-workers v1.4.1
 	github.com/cheekybits/genny v1.0.0
 	github.com/containerd/containerd v1.6.1
-	github.com/fluffy-bunny/grpcdotnetgo v0.1.246
+	github.com/fluffy-bunny/grpcdotnetgo v0.1.250
 	github.com/fluffy-bunny/sarulabsdi v0.1.63
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/mock v1.6.0
@@ -61,6 +61,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.3.0 // indirect
+	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/klauspost/compress v1.11.13 // indirect
 	github.com/labstack/echo v3.3.10+incompatible // indirect
 	github.com/labstack/gommon v0.3.1 // indirect

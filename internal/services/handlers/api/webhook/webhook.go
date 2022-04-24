@@ -2,6 +2,8 @@ package webhook
 
 import (
 	"echo-starter/internal/wellknown"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 
@@ -39,5 +41,42 @@ func (s *service) GetMiddleware() []echo.MiddlewareFunc {
 
 func (s *service) Do(c echo.Context) error {
 
-	return c.JSON(http.StatusOK, "ok")
+	switch c.Request().Method {
+	case http.MethodPost:
+		return s.post(c)
+	default:
+		return echo.NewHTTPError(http.StatusMethodNotAllowed)
+	}
+}
+
+type echoRequest struct {
+	Path   string      `json:"path"`
+	Method string      `json:"method"`
+	Header http.Header `json:"header"`
+	Body   interface{} `json:"body"`
+}
+
+func (s *service) post(c echo.Context) error {
+
+	b, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		s.Logger.Error().Err(err).Msg("failed to read request body")
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read request body")
+	}
+	body := make(map[string]interface{})
+	if len(b) > 0 {
+		err = json.Unmarshal(b, &body)
+		if err != nil {
+			s.Logger.Error().Err(err).Msg("failed to read request body")
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read request body")
+		}
+	}
+
+	response := echoRequest{
+		Path:   c.Request().URL.Path,
+		Method: c.Request().Method,
+		Header: c.Request().Header,
+		Body:   body,
+	}
+	return c.JSON(http.StatusOK, response)
 }
