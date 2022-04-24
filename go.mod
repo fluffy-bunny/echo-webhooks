@@ -6,10 +6,11 @@ go 1.18
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/alexandrevicenzi/go-sse v1.6.0
 	github.com/catmullet/go-workers v1.4.1
 	github.com/cheekybits/genny v1.0.0
 	github.com/containerd/containerd v1.6.1
-	github.com/fluffy-bunny/grpcdotnetgo v0.1.246
+	github.com/fluffy-bunny/grpcdotnetgo v0.1.250
 	github.com/fluffy-bunny/sarulabsdi v0.1.63
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/mock v1.6.0
@@ -21,7 +22,6 @@ require (
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	github.com/rbcervilla/redisstore/v8 v8.1.0
 	github.com/reugn/async v0.0.0-20200819063434-15e5b3951cd7
-	github.com/rs/xid v1.4.0
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
@@ -61,6 +61,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.3.0 // indirect
+	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/klauspost/compress v1.11.13 // indirect
 	github.com/labstack/echo v3.3.10+incompatible // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
@@ -82,6 +83,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/rs/xid v1.4.0 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/afero v1.6.0 // indirect

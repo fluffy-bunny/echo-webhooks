@@ -4,7 +4,6 @@ import (
 	"context"
 	echostarter_auth "echo-starter/internal/auth"
 	contracts_config "echo-starter/internal/contracts/config"
-	"echo-starter/internal/wellknown"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -31,8 +30,7 @@ import (
 	services_auth_session_token_store "echo-starter/internal/services/auth/session_token_store"
 	services_handlers_api_webhook "echo-starter/internal/services/handlers/api/webhook"
 
-	services_handlers_graphiql "echo-starter/internal/services/handlers/graphiql"
-
+	services_handlers_channel "echo-starter/internal/services/handlers/channel"
 	services_handlers_healthz "echo-starter/internal/services/handlers/healthz"
 	services_handlers_ready "echo-starter/internal/services/handlers/ready"
 	services_probes_database "echo-starter/internal/services/probes/database"
@@ -40,28 +38,6 @@ import (
 
 	// ACCOUNTS
 	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_accounts "echo-starter/internal/services/handlers/accounts"
-	services_handlers_api_accounts "echo-starter/internal/services/handlers/api/accounts"
-	services_handlers_api_dev "echo-starter/internal/services/handlers/api/dev"
-
-	// ARTISTS
-	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_api_artists "echo-starter/internal/services/handlers/api/artists"
-	services_handlers_api_artists_artist "echo-starter/internal/services/handlers/api/artists/artist"
-	services_handlers_api_artists_artist_albums "echo-starter/internal/services/handlers/api/artists/artist/albums"
-	services_handlers_artists "echo-starter/internal/services/handlers/artists"
-
-	// GRAPHQL
-	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_api_graphql "echo-starter/internal/services/handlers/api/graphql"
-
-	services_handlers_auth_oidc_callback "echo-starter/internal/services/handlers/auth/oidc/callback"
-	services_handlers_auth_oidc_login "echo-starter/internal/services/handlers/auth/oidc/login"
-	services_handlers_auth_oidc_logout "echo-starter/internal/services/handlers/auth/oidc/logout"
-
-	services_handlers_auth_oauth2_github_callback "echo-starter/internal/services/handlers/auth/oauth2/github/callback"
-	services_handlers_auth_oauth2_login "echo-starter/internal/services/handlers/auth/oauth2/login"
-	services_handlers_auth_oauth2_logout "echo-starter/internal/services/handlers/auth/oauth2/logout"
 
 	core_contracts_oauth2 "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/oauth2"
 
@@ -73,12 +49,13 @@ import (
 	core_contracts_session "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/session"
 	core_middleware_claimsprincipal "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/middleware/claimsprincipal"
 
-	middleware_claimsprincipal "echo-starter/internal/middleware/claimsprincipal"
-	middleware_session "echo-starter/internal/middleware/session"
+	echo_middleware "echo-starter/internal/echo/middleware"
+	//middleware_claimsprincipal "echo-starter/internal/middleware/claimsprincipal"
+
+	contracts_sse "echo-starter/internal/contracts/sse"
 	services_claimsprovider "echo-starter/internal/services/claimsprovider"
-	services_handlers_auth_profiles "echo-starter/internal/services/handlers/auth/profiles"
-	services_handlers_auth_unauthorized "echo-starter/internal/services/handlers/auth/unauthorized"
-	services_handlers_deep "echo-starter/internal/services/handlers/deep"
+	services_sse "echo-starter/internal/services/sse"
+
 	services_handlers_error "echo-starter/internal/services/handlers/error"
 	services_handlers_home "echo-starter/internal/services/handlers/home"
 
@@ -97,8 +74,10 @@ import (
 
 type Startup struct {
 	echo_contracts_startup.CommonStartup
-	config *contracts_config.Config
-	ctrl   *gomock.Controller
+	config    *contracts_config.Config
+	ctrl      *gomock.Controller
+	container di.Container
+	sseServer contracts_sse.IServerSideEventServer
 }
 
 func assertImplementation() {
@@ -112,11 +91,21 @@ func NewStartup() echo_contracts_startup.IStartup {
 	}
 	hooks := &echo_contracts_startup.Hooks{
 		PostBuildHook: func(container di.Container) error {
+			startup.container = container
 			if startup.config.ApplicationEnvironment == "Development" {
 				di.Dump(container)
 			}
 			return nil
-		}}
+		},
+		PreStartHook: func(echo *echo.Echo) error {
+			startup.sseServer = contracts_sse.GetIServerSideEventServerFromContainer(startup.container)
+			return nil
+		},
+		PreShutdownHook: func(echo *echo.Echo) error {
+			startup.sseServer.Shutdown()
+			return nil
+		},
+	}
 
 	startup.AddHooks(hooks)
 	return startup
@@ -229,13 +218,6 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 		// AUTH SERVICES
 		//----------------------------------------------------------------------------------------------------------------------
 		core_contracts_oidc.AddGetOIDCAuthenticatorConfigFunc(builder, func() *core_contracts_oidc.AuthenticatorConfig {
-			if core_utils.IsEmptyOrNil(s.config.OIDC.CallbackURL) {
-				// primarily for development
-				port := s.config.Port
-				s.config.OIDC.CallbackURL = fmt.Sprintf("http://localhost:%v%s",
-					port,
-					wellknown.OIDCCallbackPath)
-			}
 
 			return &core_contracts_oidc.AuthenticatorConfig{
 				Domain:       s.config.OIDC.Domain,
@@ -245,11 +227,6 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 			}
 		})
 		core_services_oidc.AddSingletonIOIDCAuthenticator(builder)
-		// AUTH HANDLERS
-		//----------------------------------------------------------------------------------------------------------------------
-		services_handlers_auth_oidc_login.AddScopedIHandler(builder)
-		services_handlers_auth_oidc_callback.AddScopedIHandler(builder)
-		services_handlers_auth_oidc_logout.AddScopedIHandler(builder)
 
 	case "github":
 		core_contracts_oauth2.AddGetOAuth2AuthenticatorConfigFunc(builder, func() *oauth2.Config {
@@ -262,20 +239,10 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 
 		})
 		core_services_oauth2_github.AddSingletonIGithubOAuth2Authenticator(builder)
-		// AUTH HANDLERS
-		//----------------------------------------------------------------------------------------------------------------------
-		services_handlers_auth_oauth2_login.AddScopedIHandler(builder)
-		services_handlers_auth_oauth2_github_callback.AddScopedIHandler(builder)
-		services_handlers_auth_oauth2_logout.AddScopedIHandler(builder)
 
 	default:
 		panic("auth provider not supported")
 	}
-
-	// AUTH HANDLERS
-	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_auth_profiles.AddScopedIHandler(builder)
-	services_handlers_auth_unauthorized.AddScopedIHandler(builder)
 
 	switch s.config.AuthStore {
 	case "session":
@@ -288,10 +255,9 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 
 func (s *Startup) addAppHandlers(builder *di.Builder) {
 
-	services_handlers_graphiql.AddScopedIHandler(builder)
-
-	services_handlers_api_graphql.AddScopedIHandler(builder)
 	services_handlers_api_webhook.AddScopedIHandler(builder)
+
+	services_handlers_channel.AddScopedIHandler(builder)
 
 	services_handlers_healthz.AddScopedIHandler(builder)
 	services_handlers_ready.AddScopedIHandler(builder)
@@ -299,22 +265,8 @@ func (s *Startup) addAppHandlers(builder *di.Builder) {
 	services_probes_oidc.AddSingletonIProbe(builder)
 
 	services_handlers_home.AddScopedIHandler(builder)
-	services_handlers_deep.AddScopedIHandler(builder)
 	services_handlers_error.AddScopedIHandler(builder)
 	services_handlers_about.AddScopedIHandler(builder)
-
-	// ACCOUNT SERVICES
-	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_accounts.AddScopedIHandler(builder)
-	services_handlers_api_accounts.AddScopedIHandler(builder)
-	services_handlers_api_dev.AddScopedIHandler(builder)
-
-	// ARTISTS CRUD API
-	//----------------------------------------------------------------------------------------------------------------------
-	services_handlers_artists.AddScopedIHandler(builder)
-	services_handlers_api_artists.AddScopedIHandler(builder)
-	services_handlers_api_artists_artist.AddScopedIHandler(builder)
-	services_handlers_api_artists_artist_albums.AddScopedIHandler(builder)
 
 }
 
@@ -323,6 +275,7 @@ func (s *Startup) ConfigureServices(builder *di.Builder) error {
 	// add our config as a sigleton object
 	di.AddSingletonTypeByObj(builder, s.config)
 
+	services_sse.AddSingletonIServerSideEventServer(builder)
 	// Add our main session accessor func
 	core_contracts_session.AddGetSessionFunc(builder, app_session.GetSession)
 	core_contracts_session.AddGetSessionStoreFunc(builder, s.getSessionStore)
@@ -348,8 +301,9 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	}))
 	// DevelopmentMiddlewareUsingClaimsMap adds all the needed claims so that FinalAuthVerificationMiddlewareUsingClaimsMap succeeds
 	//e.Use(middleware_claimsprincipal.DevelopmentMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
-	e.Use(middleware_session.EnsureAuthTokenRefresh(s.GetContainer()))
-	e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
+	e.Use(echo_middleware.JWT(s.GetContainer()))
+
+	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	// only after we pass auth do we slide out the auth session
 	e.Use(core_middleware_session.EnsureSlidingSession(root, app_session.GetAuthSession))

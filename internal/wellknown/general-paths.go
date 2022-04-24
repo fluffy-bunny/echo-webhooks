@@ -1,21 +1,11 @@
 package wellknown
 
 const (
-	HomePath               = "/"
-	AboutPath              = "/about"
-	HealthzPath            = "/healthz"
-	ReadyPath              = "/ready"
-	DeepPath               = "/deep/:id/:name"
-	ProfilesPath           = "/profiles"
-	ArtistsPath            = "/artists"
-	APIArtistsPath         = "/api/:version/artists"
-	APIArtistsIdPath       = "/api/:version/artists/:id"
-	APIArtistsIdAlbumsPath = "/api/:version/artists/:id/albums"
-	AccountsPath           = "/accounts"
-	APIDevPath             = "/api/:version/dev"
+	HomePath    = "/"
+	AboutPath   = "/about"
+	HealthzPath = "/healthz"
+	ReadyPath   = "/ready"
 
-	APIAccountsPath     = "/api/:version/accounts"
-	WebHookPath         = "/api/:version/webhook"
-	GraphQLEndpointPath = "/api/:version/graphql"
-	GraphiQLPath        = "/graphiql"
+	WebHookPath = "/api/:version/webhook"
+	ChannelPath = "/events/:channel"
 )
