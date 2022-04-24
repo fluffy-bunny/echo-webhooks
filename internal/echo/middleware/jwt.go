@@ -160,9 +160,10 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 					continue
 				}
 				for _, auth := range auths {
+					logger.Trace().Str("token", auth).Send()
 					if ok, _ := isJWT(auth); ok {
 						if oidcAuthenticator != nil {
-							logger.Trace().Str("token", auth).Send()
+
 							accessToken, err := oidcAuthenticator.ValidateJWTAccessToken(auth)
 							if err != nil {
 								logger.Error().Err(err).Msg("ValidateJWTAccessToken failed")
