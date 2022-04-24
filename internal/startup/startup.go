@@ -98,6 +98,7 @@ func NewStartup() echo_contracts_startup.IStartup {
 			return nil
 		},
 		PreStartHook: func(echo *echo.Echo) error {
+			log.Info().Msgf("Starting %s", log.Logger.GetLevel().String())
 			startup.sseServer = contracts_sse.GetIServerSideEventServerFromContainer(startup.container)
 			return nil
 		},
