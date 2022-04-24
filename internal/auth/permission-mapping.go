@@ -21,6 +21,7 @@ func BuildGrpcEntrypointPermissionsClaimsMap() map[string]*middleware_oidc.Entry
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.AboutPath)
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.ErrorPath)
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen("/static*")
+	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.ChannelPath)
 
 	/*
 			{

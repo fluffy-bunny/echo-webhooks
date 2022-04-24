@@ -1,12 +1,14 @@
 package webhook
 
 import (
+	contracts_sse "echo-starter/internal/contracts/sse"
 	"echo-starter/internal/wellknown"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 
+	go_sse "github.com/alexandrevicenzi/go-sse"
 	contracts_logger "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/logger"
 	contracts_handler "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/handler"
 	di "github.com/fluffy-bunny/sarulabsdi"
@@ -15,7 +17,8 @@ import (
 
 type (
 	service struct {
-		Logger contracts_logger.ILogger `inject:""`
+		Logger                contracts_logger.ILogger             `inject:""`
+		ServerSideEventServer contracts_sse.IServerSideEventServer `inject:""`
 	}
 )
 
@@ -78,5 +81,8 @@ func (s *service) post(c echo.Context) error {
 		Header: c.Request().Header,
 		Body:   body,
 	}
+	b, err = json.Marshal(response)
+	s.ServerSideEventServer.SendMessage("/events/webhooks", go_sse.SimpleMessage(string(b)))
+
 	return c.JSON(http.StatusOK, response)
 }

@@ -30,6 +30,7 @@ import (
 	services_auth_session_token_store "echo-starter/internal/services/auth/session_token_store"
 	services_handlers_api_webhook "echo-starter/internal/services/handlers/api/webhook"
 
+	services_handlers_channel "echo-starter/internal/services/handlers/channel"
 	services_handlers_healthz "echo-starter/internal/services/handlers/healthz"
 	services_handlers_ready "echo-starter/internal/services/handlers/ready"
 	services_probes_database "echo-starter/internal/services/probes/database"
@@ -51,7 +52,9 @@ import (
 	echo_middleware "echo-starter/internal/echo/middleware"
 	//middleware_claimsprincipal "echo-starter/internal/middleware/claimsprincipal"
 
+	contracts_sse "echo-starter/internal/contracts/sse"
 	services_claimsprovider "echo-starter/internal/services/claimsprovider"
+	services_sse "echo-starter/internal/services/sse"
 
 	services_handlers_error "echo-starter/internal/services/handlers/error"
 	services_handlers_home "echo-starter/internal/services/handlers/home"
@@ -71,8 +74,10 @@ import (
 
 type Startup struct {
 	echo_contracts_startup.CommonStartup
-	config *contracts_config.Config
-	ctrl   *gomock.Controller
+	config    *contracts_config.Config
+	ctrl      *gomock.Controller
+	container di.Container
+	sseServer contracts_sse.IServerSideEventServer
 }
 
 func assertImplementation() {
@@ -86,11 +91,21 @@ func NewStartup() echo_contracts_startup.IStartup {
 	}
 	hooks := &echo_contracts_startup.Hooks{
 		PostBuildHook: func(container di.Container) error {
+			startup.container = container
 			if startup.config.ApplicationEnvironment == "Development" {
 				di.Dump(container)
 			}
 			return nil
-		}}
+		},
+		PreStartHook: func(echo *echo.Echo) error {
+			startup.sseServer = contracts_sse.GetIServerSideEventServerFromContainer(startup.container)
+			return nil
+		},
+		PreShutdownHook: func(echo *echo.Echo) error {
+			startup.sseServer.Shutdown()
+			return nil
+		},
+	}
 
 	startup.AddHooks(hooks)
 	return startup
@@ -242,6 +257,8 @@ func (s *Startup) addAppHandlers(builder *di.Builder) {
 
 	services_handlers_api_webhook.AddScopedIHandler(builder)
 
+	services_handlers_channel.AddScopedIHandler(builder)
+
 	services_handlers_healthz.AddScopedIHandler(builder)
 	services_handlers_ready.AddScopedIHandler(builder)
 	services_probes_database.AddSingletonIProbe(builder)
@@ -258,6 +275,7 @@ func (s *Startup) ConfigureServices(builder *di.Builder) error {
 	// add our config as a sigleton object
 	di.AddSingletonTypeByObj(builder, s.config)
 
+	services_sse.AddSingletonIServerSideEventServer(builder)
 	// Add our main session accessor func
 	core_contracts_session.AddGetSessionFunc(builder, app_session.GetSession)
 	core_contracts_session.AddGetSessionStoreFunc(builder, s.getSessionStore)

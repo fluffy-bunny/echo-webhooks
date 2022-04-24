@@ -7,4 +7,5 @@ const (
 	ReadyPath   = "/ready"
 
 	WebHookPath = "/api/:version/webhook"
+	ChannelPath = "/events/:channel"
 )

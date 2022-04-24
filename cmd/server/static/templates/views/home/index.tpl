@@ -28,11 +28,63 @@
             {{end}}
             </tbody>
             </table>
+            <div class="container">
+            <div class="columns is-centered is-mobile">	
+                <div class="column is-dark notification is-four-fifths">
+                    <div class="is-size-7 has-text-warning" id="progress">
+                        <h1 class="title">flasktest</h1>
+                        <h2 class="subtitle">Progress example</h2>
+                        <ul id="progress_list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="columns is-centered is-mobile">	
+                <div class="column is-dark notification is-four-fifths">
+                    <div class="is-size-7 has-text-warning" id="display">
+                        <ul id="display_list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
 </body>
-    
+<script type="text/javascript">
+        var displayList  = document.getElementById("display_list");
+        
+        e1 = new EventSource('/events/webhooks');
+        e1.onmessage = function(event) {
+            var li = document.createElement("li");
+            li.innerHTML = event.data;
+            displayList.appendChild(li);
+            var items = document.querySelectorAll("#display_list li");
+            if (items.length > 3) {
+                displayList.removeChild(items[0]);
+            }
+        };
+
+        var progressList  = document.getElementById("progress_list");
+        
+
+        e2 = new EventSource('/events/webhooks-progress');
+        e2.onmessage = function(event) {
+            var li = document.createElement("li");
+            li.innerHTML = event.data;
+            progressList.appendChild(li);
+            var items = document.querySelectorAll("#progress_list li");
+            if (items.length > 1) {
+                progressList.removeChild(items[0]);
+            }
+ 
+
+        };
+    </script>
+
 {{template "footer" .}}
 {{template "html_end" .}}
 {{end}}
