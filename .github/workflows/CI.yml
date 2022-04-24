@@ -18,7 +18,7 @@ env:
   BINARY: 'server'
   GO_VERSION: '1.18'
   BUILD_PATH: './cmd/server'
-  DOCKER_IMAGE_NAME: 'echo-starter'
+  DOCKER_IMAGE_NAME: 'echo-webhooks'
   
 jobs:
   pre_flight:
