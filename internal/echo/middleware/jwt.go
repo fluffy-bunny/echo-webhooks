@@ -141,8 +141,9 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 			}
 
 			scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
-			logger := contracts_logger.GetILoggerFromContainer(scopedContainer)
-			errorEvent := logger.GetLogger().Error().Str("middleware", middlewareLogName)
+			loggerObj := contracts_logger.GetILoggerFromContainer(scopedContainer)
+			logger := loggerObj.GetLogger().With().Str("middleware", middlewareLogName).Logger()
+
 			claimsPrincipal := contracts_core_claimsprincipal.GetIClaimsPrincipalFromContainer(scopedContainer)
 
 			for _, extractor := range extractors {
@@ -153,9 +154,10 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 				for _, auth := range auths {
 					if ok, _ := isJWT(auth); ok {
 						if oidcAuthenticator != nil {
+							logger.Trace().Str("token", auth).Send()
 							accessToken, err := oidcAuthenticator.ValidateJWTAccessToken(auth)
 							if err != nil {
-								errorEvent.Err(err).Msg("ValidateJWTAccessToken failed")
+								logger.Error().Err(err).Msg("ValidateJWTAccessToken failed")
 								continue
 							}
 							accessTokenClaims := accessToken.ToClaims()
@@ -165,6 +167,8 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 							claimsPrincipal.AddClaim(contracts_core_claimsprincipal.Claim{
 								Type:  core_wellknown.ClaimTypeAuthenticated,
 								Value: "*"})
+							logger.Trace().Interface("claims", claimsPrincipal.GetClaims()).Send()
+
 						}
 					}
 				}
