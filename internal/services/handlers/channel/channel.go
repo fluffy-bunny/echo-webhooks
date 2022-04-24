@@ -1,22 +1,24 @@
-package accounts
+package channel
 
 import (
-	"echo-starter/internal/templates"
 	"echo-starter/internal/wellknown"
-	"net/http"
 	"reflect"
+
+	contracts_sse "echo-starter/internal/contracts/sse"
+
+	contracts_handler "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/handler"
 
 	contracts_core_claimsprincipal "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/claimsprincipal"
 	contracts_logger "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/logger"
-	contracts_handler "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/handler"
 	di "github.com/fluffy-bunny/sarulabsdi"
 	"github.com/labstack/echo/v4"
 )
 
 type (
 	service struct {
-		Logger          contracts_logger.ILogger                        `inject:""`
-		ClaimsPrincipal contracts_core_claimsprincipal.IClaimsPrincipal `inject:""`
+		Logger                contracts_logger.ILogger                        `inject:""`
+		ClaimsPrincipal       contracts_core_claimsprincipal.IClaimsPrincipal `inject:""`
+		ServerSideEventServer contracts_sse.IServerSideEventServer            `inject:""`
 	}
 )
 
@@ -32,16 +34,26 @@ func AddScopedIHandler(builder *di.Builder) {
 		reflectType,
 		[]contracts_handler.HTTPVERB{
 			contracts_handler.GET,
+			contracts_handler.POST,
+			contracts_handler.PUT,
+			contracts_handler.DELETE,
+			contracts_handler.PATCH,
+			contracts_handler.HEAD,
+			contracts_handler.OPTIONS,
+			contracts_handler.CONNECT,
+			contracts_handler.TRACE,
 		},
-		wellknown.AccountsPath)
+		wellknown.ChannelPath)
 }
 
-func (s *service) Ctor() {
-
-}
+func (s *service) Ctor() {}
 func (s *service) GetMiddleware() []echo.MiddlewareFunc {
 	return []echo.MiddlewareFunc{}
 }
+
 func (s *service) Do(c echo.Context) error {
-	return templates.Render(c, s.ClaimsPrincipal, http.StatusOK, "views/accounts/index", map[string]interface{}{})
+	req := c.Request()
+	res := c.Response()
+	s.ServerSideEventServer.ServeHTTP(res, req)
+	return nil
 }
