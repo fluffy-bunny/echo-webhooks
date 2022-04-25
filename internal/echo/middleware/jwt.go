@@ -153,16 +153,21 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 			logger := loggerObj.GetLogger().With().Str("middleware", middlewareLogName).Logger()
 
 			claimsPrincipal := contracts_core_claimsprincipal.GetIClaimsPrincipalFromContainer(scopedContainer)
-
+			log.Trace().Interface("headers", c.Request().Header).Msg("JWT to Claims Middleware - Headers")
 			for _, extractor := range extractors {
 				auths, err := extractor(c)
 				if err != nil {
+					logger.Trace().Msg("failed to extract")
 					continue
 				}
 				for _, auth := range auths {
-					if ok, _ := isJWT(auth); ok {
+					logger.Trace().Str("token", auth).Send()
+					ok, err := isJWT(auth)
+					if err != nil {
+						logger.Trace().Err(err).Msg("failed to check if jwt")
+					}
+					if ok {
 						if oidcAuthenticator != nil {
-							logger.Trace().Str("token", auth).Send()
 							accessToken, err := oidcAuthenticator.ValidateJWTAccessToken(auth)
 							if err != nil {
 								logger.Error().Err(err).Msg("ValidateJWTAccessToken failed")
