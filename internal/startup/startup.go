@@ -225,6 +225,7 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 				ClientID:     s.config.OIDC.ClientID,
 				ClientSecret: s.config.OIDC.ClientSecret,
 				CallbackURL:  s.config.OIDC.CallbackURL,
+				Insecure:     s.config.OIDC.Insecure,
 			}
 		})
 		core_services_oidc.AddSingletonIOIDCAuthenticator(builder)

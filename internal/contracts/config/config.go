@@ -10,6 +10,7 @@ type (
 		ClientID     string `json:"client_id" mapstructure:"CLIENT_ID"`
 		ClientSecret string `json:"client_secret" mapstructure:"CLIENT_SECRET"`
 		CallbackURL  string `json:"callback_url" mapstructure:"CALLBACK_URL"`
+		Insecure     bool   `json:"insecure" mapstructure:"INSECURE"`
 	}
 	oauth2Config struct {
 		// ClientID is the application's ID.
@@ -65,7 +66,8 @@ var (
 		"DOMAIN": "blah.auth0.com",
 		"CLIENT_ID": "in-environment",
 		"CLIENT_SECRET": "in-environment",
-		"CALLBACK_URL": ""
+		"CALLBACK_URL": "",
+		"INSECURE": false
 	},
 	"OAUTH2": {
 		"CLIENT_ID": "in-environment",
