@@ -29,10 +29,11 @@
                 "OAUTH2__CLIENT_SECRET": "33efe0b6de9468d284b195375472a97db8cb4a33", // only works against localhost:1323
                 "OAUTH2__REDIRECT_URL": "http://localhost:1323/oauth2",
                 "OAUTH2__SCOPES": "user:email,read:user",
-                "OIDC__DOMAIN": "echo-token-exchange.herokuapp.com",
+                "OIDC__DOMAIN": "host.docker.internal:9765",
                 "OIDC__CLIENT_ID": "b2b-client",
                 "OIDC__CLIENT_SECRET": "secret",
                 "OIDC__CALLBACK_URL": "",
+                "OIDC__INSECURE": "true",
                 "SESSION_ENGINE": "cookie",// cookie|inmemory|redis
                 "SESSION_MAX_AGE_SECONDS":    "1800",
                 "AUTH_COOKIE_EXPIRE_SECONDS": "1800",
