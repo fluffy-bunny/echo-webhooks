@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
-	"golang.org/x/oauth2"
-
+	core_echo "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo"
 	core_utils "github.com/fluffy-bunny/grpcdotnetgo/pkg/utils"
 	"github.com/quasoft/memstore"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/oauth2"
 
 	services_handlers_about "echo-starter/internal/services/handlers/about"
 	app_session "echo-starter/internal/session"
@@ -304,6 +305,22 @@ func (s *Startup) ConfigureServices(builder *di.Builder) error {
 	return nil
 }
 func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "header:X-Csrf-Token,form:csrf",
+		CookiePath:     "/",
+		CookieSecure:   false,
+		CookieHTTPOnly: false,
+		CookieSameSite: http.SameSiteStrictMode,
+		Skipper: func(c echo.Context) bool {
+			if core_echo.HasWellknownAuthHeaders(c) {
+				return true
+			}
+			path := c.Request().URL.Path
+			res := strings.HasPrefix(path, "/api/")
+			return res
+		},
+	}))
+
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			id := uuid.New()

@@ -11,7 +11,7 @@ require (
 	github.com/cheekybits/genny v1.0.0
 	github.com/containerd/containerd v1.6.1
 	github.com/cristalhq/atomix v0.7.1
-	github.com/fluffy-bunny/grpcdotnetgo v0.1.254
+	github.com/fluffy-bunny/grpcdotnetgo v0.1.255
 	github.com/fluffy-bunny/sarulabsdi v0.1.63
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/mock v1.6.0
