@@ -60,6 +60,11 @@ func BuildGrpcEntrypointPermissionsClaimsMap() map[string]*middleware_oidc.Entry
 			services_claimsprincipal.NewClaimFactType(core_wellknown.ClaimTypeAuthenticated),
 			services_claimsprincipal.NewClaimFactTypeAndValue("auth_type", "basic"),
 		)
+	entryPointClaimsBuilder.GetClaimsConfig(wellknown.WebHookApiKeyPath).
+		WithGrpcEntrypointPermissionsClaimFactsMapAND(
+			services_claimsprincipal.NewClaimFactType(core_wellknown.ClaimTypeAuthenticated),
+			services_claimsprincipal.NewClaimFactTypeAndValue("auth_type", "api-key"),
+		)
 
 	cMap := entryPointClaimsBuilder.GrpcEntrypointClaimsMap
 	return cMap

@@ -29,6 +29,7 @@ import (
 
 	services_auth_session_token_store "echo-starter/internal/services/auth/session_token_store"
 	services_handlers_api_webhook "echo-starter/internal/services/handlers/api/webhook"
+	services_handlers_api_webhookapikey "echo-starter/internal/services/handlers/api/webhookapikey"
 	services_handlers_api_webhookbasicauth "echo-starter/internal/services/handlers/api/webhookbasicauth"
 	services_handlers_api_webhooknoauth "echo-starter/internal/services/handlers/api/webhooknoauth"
 
@@ -264,6 +265,7 @@ func (s *Startup) addAppHandlers(builder *di.Builder) {
 	services_handlers_api_webhook.AddScopedIHandler(builder)
 	services_handlers_api_webhookbasicauth.AddScopedIHandler(builder)
 	services_handlers_api_webhooknoauth.AddScopedIHandler(builder)
+	services_handlers_api_webhookapikey.AddScopedIHandler(builder)
 
 	services_handlers_channel.AddScopedIHandler(builder)
 
@@ -312,6 +314,7 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	//e.Use(middleware_claimsprincipal.DevelopmentMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	e.Use(echo_middleware.JWT(s.GetContainer()))
 	e.Use(echo_middleware.BasicAuthWithIBasicAuthStore(s.GetContainer()))
+	e.Use(echo_middleware.KeyAuthWithIBasicAuthStore(s.GetContainer()))
 
 	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))

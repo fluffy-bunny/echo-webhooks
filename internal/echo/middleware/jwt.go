@@ -126,7 +126,7 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 		config.AuthScheme = DefaultJWTConfig.AuthScheme
 	}
 
-	extractors, err := CreateExtractors(config.TokenLookup, config.AuthScheme)
+	extractors, err := createExtractors(config.TokenLookup, config.AuthScheme)
 	if err != nil {
 		panic(err)
 	}

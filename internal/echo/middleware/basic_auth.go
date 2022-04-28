@@ -45,7 +45,7 @@ var (
 	}
 )
 
-// BasicAuth returns an BasicAuth middleware.
+// BasicAuthWithIBasicAuthStore returns an BasicAuth middleware.
 //
 // For valid credentials it calls the next handler.
 // For missing or invalid credentials, it sends "401 - Unauthorized" response.

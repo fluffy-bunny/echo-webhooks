@@ -1,4 +1,4 @@
-package webhook
+package webhookbasicauth
 
 import (
 	contracts_sse "echo-starter/internal/contracts/sse"

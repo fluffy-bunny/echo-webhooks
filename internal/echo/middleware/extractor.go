@@ -25,7 +25,7 @@ var errFormExtractorValueMissing = errors.New("missing value in the form")
 // ValuesExtractor defines a function for extracting values (keys/tokens) from the given context.
 type ValuesExtractor func(c echo.Context) ([]string, error)
 
-func CreateExtractors(lookups string, authScheme string) ([]ValuesExtractor, error) {
+func createExtractors(lookups string, authScheme string) ([]ValuesExtractor, error) {
 	if lookups == "" {
 		return nil, nil
 	}

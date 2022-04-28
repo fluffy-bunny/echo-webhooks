@@ -37,6 +37,11 @@ func AddMockSingletonIBasicAuthStore(builder *di.Builder, mockController *gomock
 			subtle.ConstantTimeCompare([]byte(password), []byte("secret")) == 1 {
 			return true, nil
 		}
+		if subtle.ConstantTimeCompare([]byte(username), []byte("X-Api-Key")) == 1 &&
+			subtle.ConstantTimeCompare([]byte(password), []byte("secret")) == 1 {
+			return true, nil
+		}
+
 		return false, nil
 	}).AnyTimes()
 	contracts_stores_basicauth.AddSingletonIBasicAuthStoreByObj(builder, mock)
