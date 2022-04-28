@@ -29,6 +29,10 @@ import (
 
 	services_auth_session_token_store "echo-starter/internal/services/auth/session_token_store"
 	services_handlers_api_webhook "echo-starter/internal/services/handlers/api/webhook"
+	services_handlers_api_webhookbasicauth "echo-starter/internal/services/handlers/api/webhookbasicauth"
+	services_handlers_api_webhooknoauth "echo-starter/internal/services/handlers/api/webhooknoauth"
+
+	services_stores_basicauth "echo-starter/internal/services/stores/basicauth"
 
 	services_handlers_channel "echo-starter/internal/services/handlers/channel"
 	services_handlers_healthz "echo-starter/internal/services/handlers/healthz"
@@ -258,6 +262,8 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 func (s *Startup) addAppHandlers(builder *di.Builder) {
 
 	services_handlers_api_webhook.AddScopedIHandler(builder)
+	services_handlers_api_webhookbasicauth.AddScopedIHandler(builder)
+	services_handlers_api_webhooknoauth.AddScopedIHandler(builder)
 
 	services_handlers_channel.AddScopedIHandler(builder)
 
@@ -292,6 +298,7 @@ func (s *Startup) ConfigureServices(builder *di.Builder) error {
 	s.addAppHandlers(builder)
 
 	services_claimsprovider.AddSingletonIClaimsProviderMock(builder, s.ctrl)
+	services_stores_basicauth.AddMockSingletonIBasicAuthStore(builder, s.ctrl)
 	return nil
 }
 func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
@@ -304,6 +311,7 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	// DevelopmentMiddlewareUsingClaimsMap adds all the needed claims so that FinalAuthVerificationMiddlewareUsingClaimsMap succeeds
 	//e.Use(middleware_claimsprincipal.DevelopmentMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	e.Use(echo_middleware.JWT(s.GetContainer()))
+	e.Use(echo_middleware.BasicAuthWithIBasicAuthStore(s.GetContainer()))
 
 	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))

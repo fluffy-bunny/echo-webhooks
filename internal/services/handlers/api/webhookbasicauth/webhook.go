@@ -37,7 +37,7 @@ func AddScopedIHandler(builder *di.Builder) {
 		[]contracts_handler.HTTPVERB{
 			contracts_handler.POST,
 		},
-		wellknown.WebHookPath)
+		wellknown.WebHookBasicAuthPath)
 }
 
 func (s *service) GetMiddleware() []echo.MiddlewareFunc {

@@ -180,6 +180,9 @@ func JWTWithConfig(root di.Container, config JWTConfig) echo.MiddlewareFunc {
 							claimsPrincipal.AddClaim(contracts_core_claimsprincipal.Claim{
 								Type:  core_wellknown.ClaimTypeAuthenticated,
 								Value: "*"})
+							claimsPrincipal.AddClaim(contracts_core_claimsprincipal.Claim{
+								Type:  "auth_type",
+								Value: "jwt"})
 							logger.Trace().Interface("claims", claimsPrincipal.GetClaims()).Send()
 						}
 					}
