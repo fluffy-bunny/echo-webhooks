@@ -1,4 +1,4 @@
-package webhook
+package webhookapikey
 
 import (
 	contracts_sse "echo-starter/internal/contracts/sse"
@@ -37,7 +37,7 @@ func AddScopedIHandler(builder *di.Builder) {
 		[]contracts_handler.HTTPVERB{
 			contracts_handler.POST,
 		},
-		wellknown.WebHookPath)
+		wellknown.WebHookApiKeyPath)
 }
 
 func (s *service) GetMiddleware() []echo.MiddlewareFunc {

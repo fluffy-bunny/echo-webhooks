@@ -1,14 +1,15 @@
-package webhook
+package webhooknoauth
 
 import (
 	contracts_sse "echo-starter/internal/contracts/sse"
-	services_handlers_api "echo-starter/internal/services/handlers/api"
 	"echo-starter/internal/wellknown"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
+
+	services_handlers_api "echo-starter/internal/services/handlers/api"
 
 	go_sse "github.com/alexandrevicenzi/go-sse"
 	contracts_logger "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/logger"
@@ -37,7 +38,7 @@ func AddScopedIHandler(builder *di.Builder) {
 		[]contracts_handler.HTTPVERB{
 			contracts_handler.POST,
 		},
-		wellknown.WebHookPath)
+		wellknown.WebHookNoAuthPath)
 }
 
 func (s *service) GetMiddleware() []echo.MiddlewareFunc {

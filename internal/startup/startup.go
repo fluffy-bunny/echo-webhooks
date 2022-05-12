@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
-	"golang.org/x/oauth2"
-
+	core_echo "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo"
 	core_utils "github.com/fluffy-bunny/grpcdotnetgo/pkg/utils"
 	"github.com/quasoft/memstore"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/oauth2"
 
 	services_handlers_about "echo-starter/internal/services/handlers/about"
 	app_session "echo-starter/internal/session"
@@ -29,6 +30,11 @@ import (
 
 	services_auth_session_token_store "echo-starter/internal/services/auth/session_token_store"
 	services_handlers_api_webhook "echo-starter/internal/services/handlers/api/webhook"
+	services_handlers_api_webhookapikey "echo-starter/internal/services/handlers/api/webhookapikey"
+	services_handlers_api_webhookbasicauth "echo-starter/internal/services/handlers/api/webhookbasicauth"
+	services_handlers_api_webhooknoauth "echo-starter/internal/services/handlers/api/webhooknoauth"
+
+	services_stores_basicauth "echo-starter/internal/services/stores/basicauth"
 
 	services_handlers_channel "echo-starter/internal/services/handlers/channel"
 	services_handlers_healthz "echo-starter/internal/services/handlers/healthz"
@@ -225,6 +231,7 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 				ClientID:     s.config.OIDC.ClientID,
 				ClientSecret: s.config.OIDC.ClientSecret,
 				CallbackURL:  s.config.OIDC.CallbackURL,
+				Insecure:     s.config.OIDC.Insecure,
 			}
 		})
 		core_services_oidc.AddSingletonIOIDCAuthenticator(builder)
@@ -257,6 +264,9 @@ func (s *Startup) addAuthServices(builder *di.Builder) {
 func (s *Startup) addAppHandlers(builder *di.Builder) {
 
 	services_handlers_api_webhook.AddScopedIHandler(builder)
+	services_handlers_api_webhookbasicauth.AddScopedIHandler(builder)
+	services_handlers_api_webhooknoauth.AddScopedIHandler(builder)
+	services_handlers_api_webhookapikey.AddScopedIHandler(builder)
 
 	services_handlers_channel.AddScopedIHandler(builder)
 
@@ -291,9 +301,26 @@ func (s *Startup) ConfigureServices(builder *di.Builder) error {
 	s.addAppHandlers(builder)
 
 	services_claimsprovider.AddSingletonIClaimsProviderMock(builder, s.ctrl)
+	services_stores_basicauth.AddMockSingletonIBasicAuthStore(builder, s.ctrl)
 	return nil
 }
 func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "header:X-Csrf-Token,form:csrf",
+		CookiePath:     "/",
+		CookieSecure:   false,
+		CookieHTTPOnly: false,
+		CookieSameSite: http.SameSiteStrictMode,
+		Skipper: func(c echo.Context) bool {
+			if core_echo.HasWellknownAuthHeaders(c) {
+				return true
+			}
+			path := c.Request().URL.Path
+			res := strings.HasPrefix(path, "/api/")
+			return res
+		},
+	}))
+
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			id := uuid.New()
@@ -303,6 +330,8 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	// DevelopmentMiddlewareUsingClaimsMap adds all the needed claims so that FinalAuthVerificationMiddlewareUsingClaimsMap succeeds
 	//e.Use(middleware_claimsprincipal.DevelopmentMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	e.Use(echo_middleware.JWT(s.GetContainer()))
+	e.Use(echo_middleware.BasicAuthWithIBasicAuthStore(s.GetContainer()))
+	e.Use(echo_middleware.KeyAuthWithIBasicAuthStore(s.GetContainer()))
 
 	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))

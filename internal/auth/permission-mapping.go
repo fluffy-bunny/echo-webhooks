@@ -22,6 +22,7 @@ func BuildGrpcEntrypointPermissionsClaimsMap() map[string]*middleware_oidc.Entry
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.ErrorPath)
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen("/static*")
 	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.ChannelPath)
+	entryPointClaimsBuilder.WithGrpcEntrypointPermissionsClaimsMapOpen(wellknown.WebHookNoAuthPath)
 
 	/*
 			{
@@ -53,6 +54,16 @@ func BuildGrpcEntrypointPermissionsClaimsMap() map[string]*middleware_oidc.Entry
 		).GetChild().
 		WithGrpcEntrypointPermissionsClaimFactsMapOR(
 			services_claimsprincipal.NewClaimFactTypeAndValue("scope", "invoices"),
+		)
+	entryPointClaimsBuilder.GetClaimsConfig(wellknown.WebHookBasicAuthPath).
+		WithGrpcEntrypointPermissionsClaimFactsMapAND(
+			services_claimsprincipal.NewClaimFactType(core_wellknown.ClaimTypeAuthenticated),
+			services_claimsprincipal.NewClaimFactTypeAndValue("auth_type", "basic"),
+		)
+	entryPointClaimsBuilder.GetClaimsConfig(wellknown.WebHookApiKeyPath).
+		WithGrpcEntrypointPermissionsClaimFactsMapAND(
+			services_claimsprincipal.NewClaimFactType(core_wellknown.ClaimTypeAuthenticated),
+			services_claimsprincipal.NewClaimFactTypeAndValue("auth_type", "api-key"),
 		)
 
 	cMap := entryPointClaimsBuilder.GrpcEntrypointClaimsMap

@@ -111,7 +111,7 @@ func TestCreateExtractors(t *testing.T) {
 				setPathParams(c, tc.givenPathParams)
 			}
 
-			extractors, err := CreateExtractors(tc.whenLoopups, "")
+			extractors, err := createExtractors(tc.whenLoopups, "")
 			if tc.expectCreateError != "" {
 				assert.EqualError(t, err, tc.expectCreateError)
 				return

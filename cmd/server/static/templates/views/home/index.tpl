@@ -28,8 +28,9 @@
             {{end}}
             </tbody>
             </table>
+           </br>
             <div class="container">
-            <div class="columns is-centered is-mobile">	
+            <div class="columns text-left mt-5 is-mobile">	
                 <div class="column is-dark notification is-four-fifths">
                     <div class="is-size-7 has-text-warning" id="progress">
                         <h1 class="title">Server Side Events</h1>
@@ -40,6 +41,7 @@
                 </div>
             </div>
         </div>
+        </br>
         <div class="container">
             <div class="columns is-centered is-mobile">	
                 <div class="column is-dark notification is-four-fifths">
