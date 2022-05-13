@@ -65,6 +65,8 @@ import (
 	services_handlers_error "echo-starter/internal/services/handlers/error"
 	services_handlers_home "echo-starter/internal/services/handlers/home"
 
+	middleware_hmacsha256 "echo-starter/internal/middleware/hmacsha256"
+
 	core_contracts "github.com/fluffy-bunny/grpcdotnetgo/pkg/contracts/core"
 	contracts_cookies "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/contracts/cookies"
 	core_middleware_session "github.com/fluffy-bunny/grpcdotnetgo/pkg/echo/middleware/session"
@@ -333,6 +335,7 @@ func (s *Startup) Configure(e *echo.Echo, root di.Container) error {
 	e.Use(echo_middleware.BasicAuthWithIBasicAuthStore(s.GetContainer()))
 	e.Use(echo_middleware.KeyAuthWithIBasicAuthStore(s.GetContainer()))
 
+	e.Use(middleware_hmacsha256.ValidateHMACSHA256())
 	//e.Use(middleware_claimsprincipal.AuthenticatedSessionToClaimsPrincipalMiddleware(root))
 	e.Use(core_middleware_claimsprincipal.FinalAuthVerificationMiddlewareUsingClaimsMap(echostarter_auth.BuildGrpcEntrypointPermissionsClaimsMap(), true))
 	// only after we pass auth do we slide out the auth session
