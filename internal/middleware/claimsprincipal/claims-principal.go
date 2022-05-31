@@ -55,16 +55,13 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 			for {
 				scopedContainer := c.Get(core_wellknown.SCOPED_CONTAINER_KEY).(di.Container)
 				logger := contracts_logger.GetILoggerFromContainer(scopedContainer)
-				errorEvent := logger.GetLogger().Error().Str("middleware", middlewareLogName)
-				debugEvent := logger.GetLogger().Debug().Str("middleware", middlewareLogName)
-				traceEvent := logger.GetLogger().Trace().Str("middleware", middlewareLogName)
 
 				// Skip this if we see an authorization header
 				// important: The CSRF middleware is skipped as well if there is an Authorization header
 				// So if we get here then we can't be adding any claims if someone got our session
 				// always use the HasWellknownAuthHeaders centralized func
 				if core_echo.HasWellknownAuthHeaders(c) {
-					traceEvent.Msg("skipping middleware - HasWellknownAuthHeaders")
+					logger.Debug().Msg("skipping middleware - HasWellknownAuthHeaders")
 					// this is a cookie/session claims maker so if another authorization scheme is used we will not contribute
 					break
 				}
@@ -72,7 +69,7 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 				sess := session.GetSession(c)
 				bindingKey, ok := sess.Values["binding_key"]
 				if !ok {
-					traceEvent.Msg("skipping middleware - if we don't  have this the user hasn't logged in")
+					logger.Debug().Msg("skipping middleware - if we don't  have this the user hasn't logged in")
 					// if we don't  have this the user hasn't logged in
 					break
 				}
@@ -85,7 +82,7 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 				token, err := tokenStore.GetTokenByIdempotencyKey(bindingKey.(string))
 				if err != nil {
 					// not necessarily an error. The tokens could have been removed and our idompotent key could be stale
-					debugEvent.Err(err).Msg("Failed to get token")
+					logger.Debug().Err(err).Msg("Failed to get token")
 					terminateAuthSession()
 					break
 				}
@@ -96,7 +93,7 @@ func AuthenticatedSessionToClaimsPrincipalMiddleware(root di.Container) echo.Mid
 					if oidcAuthenticator != nil {
 						accessToken, err := oidcAuthenticator.ValidateJWTAccessToken(token.AccessToken)
 						if err != nil {
-							errorEvent.Err(err).Msg("ValidateJWTAccessToken failed")
+							logger.Error().Err(err).Msg("ValidateJWTAccessToken failed")
 							terminateAuthSession()
 							break
 						}

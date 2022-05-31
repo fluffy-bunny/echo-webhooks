@@ -151,10 +151,10 @@ func KeyAuthWithConfig(config KeyAuthConfig) echo.MiddlewareFunc {
 					continue
 				}
 				for _, key := range keys {
-					logger.Trace().Str("key", key).Msg("key-auth: key extracted")
+					logger.Debug().Str("key", key).Msg("key-auth: key extracted")
 					valid, err := config.Validator(key, c)
 					if err != nil {
-						logger.Trace().Str("key", key).Err(err).Msg("key-auth: key validation failed")
+						logger.Debug().Str("key", key).Err(err).Msg("key-auth: key validation failed")
 						continue
 					}
 					if valid {
