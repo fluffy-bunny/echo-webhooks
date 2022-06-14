@@ -1,6 +1,7 @@
 package hmacsha256
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 
@@ -25,7 +26,11 @@ func ValidateHMACSHA256() echo.MiddlewareFunc {
 
 			index := 0
 			headers := c.Request().Header
+			// this will empty the buffer
 			b, _ := ioutil.ReadAll(c.Request().Body)
+			// we will put it back so that the handler can read it as well
+			c.Request().Body = ioutil.NopCloser(bytes.NewReader(b))
+
 			signature, _ := ComputeHash(b, []byte("secret"))
 			logger = logger.With().Str("signature", signature).Logger()
 
